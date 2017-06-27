@@ -66,11 +66,11 @@ function buildRegexes( $lines ) {
 
 function filterLink( $url ) {
   global $wgIwNofollowWhitelist;
-  $source = wfMsgForContent( 'iwnofollow-whitelist' );
+  $msg = wfMessage( 'iwnofollow-whitelist' )->inContentLanguage();
 
-  $whitelist = wfEmptyMsg( 'iwnofollow-whitelist', $source ) 
+  $whitelist = $msg->isBlank()
                ? false 
-               : buildRegexes( explode( "\n", $source ) );
+               : buildRegexes( explode( "\n", $msg->text() ) );
 
   $cwl = $wgIwNofollowWhitelist !== false ? preg_match( $wgIwNofollowWhitelist, $url ) : false;
   $wl  = $whitelist !== false ? preg_match( $whitelist, $url ) : false;
