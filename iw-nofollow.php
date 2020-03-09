@@ -1,5 +1,10 @@
 <?php
 
+namespace MediaWiki\Extension\IWNoFollow;
+
+use MediaWiki\Linker\LinkRenderer;
+use MediaWiki\Linker\LinkTarget;
+
 if ( !defined( 'MEDIAWIKI' ) ) {
 	exit;
 }
@@ -12,7 +17,7 @@ $wgExtensionCredits['other'][] = array(
         'descriptionmsg' => 'iwnofollow-desc'
 );
 
-$wgHooks['LinkEnd'][] = 'addnofollow';
+$wgHooks['HtmlPageLinkRendererEnd'][] = 'MediaWiki\\Extension\\IWNoFollow\\addnofollow';
 
 $wgIwNofollowIP = dirname( __FILE__ );
 $wgExtensionMessagesFiles['iw-nofollow'] = "$wgIwNofollowIP/iw-nofollow.i18n.php";
@@ -69,7 +74,7 @@ function filterLink( $url ) {
   $msg = wfMessage( 'iwnofollow-whitelist' )->inContentLanguage();
 
   $whitelist = $msg->isBlank()
-               ? false 
+               ? false
                : buildRegexes( explode( "\n", $msg->text() ) );
 
   $cwl = $wgIwNofollowWhitelist !== false ? preg_match( $wgIwNofollowWhitelist, $url ) : false;
@@ -78,7 +83,16 @@ function filterLink( $url ) {
   return !( $cwl || $wl );
 }
 
-function addnofollow($skin, $target, $options, &$text, &$attribs, &$ret) {
+/**
+ * @param LinkRenderer $linkRenderer
+ * @param LinkTarget $target
+ * @param bool $isKnown
+ * @param string &$text
+ * @param array &$attribs
+ * @param string &$ret: the value to return if your hook returns false.
+ * @return bool|null
+ */
+function addnofollow($linkRenderer, $target, $isKnown, &$text, &$attribs, &$ret) {
   if (array_key_exists('class',$attribs) && strpos($attribs['class'],'extiw') !== false ) {
     if (filterLink($attribs['href'])) {
       $attribs['rel'] = 'nofollow';
